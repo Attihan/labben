@@ -1,0 +1,35 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+  padding-top: 70px;
+  position: relative;
+  z-index: 1;  /* keep content above canvas */
+}
+
+/* canvas container styling */
+#canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* keep canvas behind other elements */
+  pointer-events: auto; /* allows interaction with 3D scene */
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+}
+
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
