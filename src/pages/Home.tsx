@@ -13,10 +13,14 @@ function Floor({ position = [0, 0, 0] }: PlaneProps) {
   const [ref] = usePlane(() => ({
     rotation: [-Math.PI / 2, 0, 0],
     position,
+    material: {
+      friction: 1.4,
+      restitution: 0,
+    },
   }))
 
   // floor color
-  const floorColor = '#e1ec9e'
+  const floorColor =  '#3F4D3F' //'#e1ec9e'
 
 
   // tweak shadows
@@ -42,47 +46,58 @@ function Floor({ position = [0, 0, 0] }: PlaneProps) {
   )
 }
 
-//  a linkable gbl model, physics and position included
+//  frame for clickable models
 type ClickableModelProps = {
   position: [number, number, number]
   href?: string
   glbPath: string
   args?: [number, number, number]
   scale?: number
+  rotation?: [number, number, number]
+  tune?: [number, number]
 }
 
-function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1 }: ClickableModelProps) {
+// takes in arguments, creates a physics box, and handles click interactions for the model
+function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1, rotation = [0, 0, 0], tune = [0.2, 0.0] }: ClickableModelProps) {
   const { scene } = useGLTF(glbPath)
 
   const model = useMemo(() => {
     const cloned = scene.clone(true)
+    const [roughness, metalness] = tune
 
     cloned.traverse((obj: any) => {
       if (!obj.isMesh) return
       obj.castShadow = true
-      obj.receiveShadow = true
+      obj.receiveShadow = false
 
-      // Tweaks the material roughness and metall of the GBL models
+      // Tweaks the material roughness and metall of all the GBL models
       const mat = obj.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
-      const tune = (m: THREE.MeshStandardMaterial) => {
-        if (typeof m.roughness === 'number') m.roughness = 0.2
-        if (typeof m.metalness === 'number') m.metalness = 0.0
+      const tuneMaterial = (m: THREE.MeshStandardMaterial) => {
+        if (typeof m.roughness === 'number') m.roughness = roughness
+        if (typeof m.metalness === 'number') m.metalness = metalness
         m.needsUpdate = true
       }
-      if (Array.isArray(mat)) mat.forEach((m) => m && tune(m))
-      else if (mat) tune(mat)
+      if (Array.isArray(mat)) mat.forEach((m) => m && tuneMaterial(m))
+      else if (mat) tuneMaterial(mat)
     })
 
     return cloned
-  }, [scene])
+  }, [scene, tune])
 
   // the physics for the model
   const [ref] = useBox(() => ({
     mass: 1,
     position,
     args,
-    linearDamping: 0.5,
-    angularDamping: 0.5,
+    linearDamping: 0.4,
+    angularDamping: 0.95,
+    allowSleep: true,
+    sleepSpeedLimit: 0.05,
+    sleepTimeLimit: 1,
+    material: {
+      friction: 1.2,
+      restitution: 0,
+    },
   }))
 
   // handles redirects when clicking on the model
@@ -104,7 +119,7 @@ function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1 }
         <primitive
           object={model} // the model itself
           scale={0.7 * scale} // the scale of model 
-          rotation={[0, 5, 0]} // rotation
+          rotation={rotation} // rotations
         />
       </Center>
     </group>
@@ -124,6 +139,15 @@ function ClickableCube({ position, href, args = [1, 1, 1] }: ClickableCubeProps)
     mass: 1,
     position,
     args,
+    linearDamping: 0.9,
+    angularDamping: 0.95,
+    allowSleep: true,
+    sleepSpeedLimit: 0.05,
+    sleepTimeLimit: 1,
+    material: {
+      friction: 1.2,
+      restitution: 0,
+    },
   }))
 
 // cube click handler
@@ -188,7 +212,15 @@ function Home() {
           />
 
           <Suspense fallback={null}>
-            <Physics>
+            <Physics
+              broadphase="SAP"
+              allowSleep
+              iterations={12}
+              defaultContactMaterial={{
+                friction: 1.2,
+                restitution: 0,
+              }}
+            >
               <Floor />
 
               <ClickableModel
@@ -197,11 +229,32 @@ function Home() {
                 glbPath="/models/controller.glb"
                 args={[1, 1, 1]}
                 scale={1}
+                rotation={[0, 17.5, 0]}
+              />
+
+              <ClickableModel
+                position={[4, 5, -8]}
+                href="/animations"
+                glbPath="/models/QuestionMark.glb"
+                rotation={[-0.5, 0, 0]}
+                args={[1, 1.5, 1]}
+                scale={5}
+                tune ={[0.2, 0.0]}
+              />
+
+              <ClickableModel
+                position={[-4, 5,3]} 
+                href='interactive'
+                glbPath='/models/pointer.glb'
+                args={[1, 1.5, 1]}
+                rotation={[-0.7, 1.2, 0.3]}
+                scale={1}
+                tune={[0.0, 0.0]}
               />
 
               <ClickableCube position={[5, 7, -2]} href="/animations" />
-              <ClickableCube position={[-4, 9, 3]} href="/interactive"/>
-              <ClickableCube position={[-2, 10, 1]} href="/about"/>
+
+              <ClickableCube position={[-2, 7, 1]} href="/about"/>
             </Physics>
           </Suspense>
 
