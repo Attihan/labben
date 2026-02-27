@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState, Suspense } from 'react'
 import '../styles/Home.css'
 import Navbar from '../components/layout/Navbar'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Center, Environment } from '@react-three/drei'
+import { OrbitControls, useGLTF, Center, Html } from '@react-three/drei'
 import { Physics, usePlane, useBox } from '@react-three/cannon'
 import * as THREE from 'three'
+
 
 // Tweaks the floor
 type PlaneProps = { position?: [number, number, number] }
@@ -55,11 +56,22 @@ type ClickableModelProps = {
   scale?: number
   rotation?: [number, number, number]
   tune?: [number, number]
+  tooltip?: string
 }
 
 // takes in arguments, creates a physics box, and handles click interactions for the model
-function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1, rotation = [0, 0, 0], tune = [0.2, 0.0] }: ClickableModelProps) {
+function ClickableModel({
+  position,
+  href,
+  glbPath,
+  args = [1, 1, 1],
+  scale = 1,
+  rotation = [0, 0, 0],
+  tune = [0.2, 0.0],
+  tooltip,
+}: ClickableModelProps) {
   const { scene } = useGLTF(glbPath)
+  const [hovered, setHovered] = useState(false)
 
   const model = useMemo(() => {
     const cloned = scene.clone(true)
@@ -111,8 +123,14 @@ function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1, 
     <group
       ref={ref as any}
       onClick={handleClick} 
-      onPointerOver={() => (document.body.style.cursor = href ? 'pointer' : 'default')}
-      onPointerOut={() => (document.body.style.cursor = 'default')}
+      onPointerOver={() => {
+        document.body.style.cursor = href ? 'pointer' : 'default'
+        setHovered(true)
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'default'
+        setHovered(false)
+      }}
     
     >
       <Center>
@@ -122,6 +140,23 @@ function ClickableModel({ position, href, glbPath, args = [1, 1, 1], scale = 1, 
           rotation={rotation} // rotations
         />
       </Center>
+
+      {hovered && tooltip && (    // if hovered, show tooltip above model
+        <Html position={[0, 1.8, 0]} center>
+          <div
+            style={{
+              background: 'rgba(0, 0, 0, 0.8)',
+              color: '#fff',
+              padding: '6px 10px',
+              borderRadius: 6,
+              fontSize: 12,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tooltip}
+          </div>
+        </Html>
+      )}
     </group>
   )
 }
@@ -223,26 +258,28 @@ function Home() {
             >
               <Floor />
 
-              <ClickableModel
+              <ClickableModel // game controller model
                 position={[1, 10, -1]}
                 href="/games"
                 glbPath="/models/controller.glb"
                 args={[1, 1, 1]}
                 scale={1}
                 rotation={[0, 17.5, 0]}
+                tooltip="Games"
               />
 
-              <ClickableModel
+              <ClickableModel // question mark model 
                 position={[4, 5, -8]}
-                href="/animations"
+                href="/questions"
                 glbPath="/models/QuestionMark.glb"
                 rotation={[-0.5, 0, 0]}
                 args={[1, 1.5, 1]}
                 scale={5}
                 tune ={[0.2, 0.0]}
+                tooltip='Questions about the website'
               />
 
-              <ClickableModel
+              <ClickableModel // pointer model
                 position={[-4, 5,3]} 
                 href='interactive'
                 glbPath='/models/pointer.glb'
@@ -250,9 +287,10 @@ function Home() {
                 rotation={[-0.7, 1.2, 0.3]}
                 scale={1}
                 tune={[0.0, 0.0]}
+                tooltip='Interactive experiments'
               />
 
-              <ClickableCube position={[5, 7, -2]} href="/animations" />
+              <ClickableCube position={[4, 7, -2]} href="/animations" />
 
               <ClickableCube position={[-2, 7, 1]} href="/about"/>
             </Physics>
