@@ -290,9 +290,20 @@ function Home() {
                 tooltip='Interactive experiments'
               />
 
-              <ClickableCube position={[4, 7, -2]} href="/animations" />
+              <ClickableCube 
+              position={[4, 7, -2]} 
+              href="/animations" />
 
-              <ClickableCube position={[-2, 7, 1]} href="/about"/>
+              <ClickableModel // book model
+              position={[-2, 7, 1]} 
+              href="/about"
+              glbPath='/models/book.glb'
+              args={[1, 1.5, 1]}
+              rotation={[0, 2, 25]}
+              scale={1}
+              tune={[0.2, 0.0]}
+              tooltip='What I have learned creating Labben'
+              />
             </Physics>
           </Suspense>
 
