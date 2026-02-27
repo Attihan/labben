@@ -1,219 +1,14 @@
-import { useEffect, useMemo, useState, Suspense } from 'react'
+import { Suspense } from 'react'
 import '../styles/Home.css'
 import Navbar from '../components/layout/Navbar'
-import { Canvas, ThreeEvent } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Center, Html } from '@react-three/drei'
-import { Physics, usePlane, useBox } from '@react-three/cannon'
-import * as THREE from 'three'
-
-
-// Tweaks the floor
-type PlaneProps = { position?: [number, number, number] }
-
-function Floor({ position = [0, 0, 0] }: PlaneProps) {
-  const [ref] = usePlane(() => ({
-    rotation: [-Math.PI / 2, 0, 0],
-    position,
-    material: {
-      friction: 1.4,
-      restitution: 0,
-    },
-  }))
-
-  // floor color
-  const floorColor =  '#3F4D3F' //'#e1ec9e'
-
-
-  // tweak shadows
-  return (
-    <group>
-      {/* Base floor (no shadows) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={position}>
-        <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial color={floorColor} roughness={1} metalness={0} />
-      </mesh>
-
-      {/* Shadow catcher (only shadows) */}
-      <mesh
-        ref={ref as any}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[position[0], position[1] + 0.001, position[2]]}
-        receiveShadow
-      >
-        <planeGeometry args={[50, 50]} />
-        <shadowMaterial opacity={0.50} />
-      </mesh>
-    </group>
-  )
-}
-
-//  frame for clickable models
-type ClickableModelProps = {
-  position: [number, number, number]
-  href?: string
-  glbPath: string
-  args?: [number, number, number]
-  scale?: number
-  rotation?: [number, number, number]
-  tune?: [number, number]
-  tooltip?: string
-}
-
-// takes in arguments, creates a physics box, and handles click interactions for the model
-function ClickableModel({
-  position,
-  href,
-  glbPath,
-  args = [1, 1, 1],
-  scale = 1,
-  rotation = [0, 0, 0],
-  tune = [0.2, 0.0],
-  tooltip,
-}: ClickableModelProps) {
-  const { scene } = useGLTF(glbPath)
-  const [hovered, setHovered] = useState(false)
-
-  const model = useMemo(() => {
-    const cloned = scene.clone(true)
-    const [roughness, metalness] = tune
-
-    cloned.traverse((obj: any) => {
-      if (!obj.isMesh) return
-      obj.castShadow = true
-      obj.receiveShadow = false
-
-      // Tweaks the material roughness and metall of all the GBL models
-      const mat = obj.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]
-      const tuneMaterial = (m: THREE.MeshStandardMaterial) => {
-        if (typeof m.roughness === 'number') m.roughness = roughness
-        if (typeof m.metalness === 'number') m.metalness = metalness
-        m.needsUpdate = true
-      }
-      if (Array.isArray(mat)) mat.forEach((m) => m && tuneMaterial(m))
-      else if (mat) tuneMaterial(mat)
-    })
-
-    return cloned
-  }, [scene, tune])
-
-  // the physics for the model
-  const [ref] = useBox(() => ({
-    mass: 1,
-    position,
-    args,
-    linearDamping: 0.4,
-    angularDamping: 0.95,
-    allowSleep: true,
-    sleepSpeedLimit: 0.05,
-    sleepTimeLimit: 1,
-    material: {
-      friction: 1.2,
-      restitution: 0,
-    },
-  }))
-
-  // handles redirects when clicking on the model
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation()
-    if (href) window.location.href = href
-  }
-
-  // the model itself, with click interactions
-  return (
-    <group
-      ref={ref as any}
-      onClick={handleClick} 
-      onPointerOver={() => {
-        document.body.style.cursor = href ? 'pointer' : 'default'
-        setHovered(true)
-      }}
-      onPointerOut={() => {
-        document.body.style.cursor = 'default'
-        setHovered(false)
-      }}
-    
-    >
-      <Center>
-        <primitive
-          object={model} // the model itself
-          scale={0.7 * scale} // the scale of model 
-          rotation={rotation} // rotations
-        />
-      </Center>
-
-      {hovered && tooltip && (    // if hovered, show tooltip above model
-        <Html position={[0, 1.8, 0]} center>
-          <div
-            style={{
-              background: 'rgba(0, 0, 0, 0.8)',
-              color: '#fff',
-              padding: '6px 10px',
-              borderRadius: 6,
-              fontSize: 12,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tooltip}
-          </div>
-        </Html>
-      )}
-    </group>
-  )
-}
-
-// --- Simple physics cube (no GLB), delete when replaced with actual models !!!
-type ClickableCubeProps = {
-  position: [number, number, number]
-  href?: string
-  args?: [number, number, number]
-}
-
-// cube physics
-function ClickableCube({ position, href, args = [1, 1, 1] }: ClickableCubeProps) {
-  const [ref] = useBox(() => ({
-    mass: 1,
-    position,
-    args,
-    linearDamping: 0.9,
-    angularDamping: 0.95,
-    allowSleep: true,
-    sleepSpeedLimit: 0.05,
-    sleepTimeLimit: 1,
-    material: {
-      friction: 1.2,
-      restitution: 0,
-    },
-  }))
-
-// cube click handler
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation()
-    if (href) window.location.href = href
-  }
-
-  return (
-    <mesh
-      castShadow
-      receiveShadow
-      ref={ref as any}
-      onClick={handleClick}
-      onPointerOver={() => (document.body.style.cursor = href ? 'pointer' : 'default')}
-      onPointerOut={() => (document.body.style.cursor = 'default')}
-    >
-      <boxGeometry args={args} />
-      <meshStandardMaterial color="orange" roughness={0.7} metalness={0} />
-    </mesh>
-  )
-}
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+import { Physics } from '@react-three/cannon'
+import ClickableCube from '../components/scene/ClickableCube'
+import ClickableModel from '../components/scene/ClickableModel'
+import Floor from '../components/scene/Floor'
 
 function Home() {
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    const t = setTimeout(() => setReady(true), 1000)
-    return () => clearTimeout(t)
-  }, [])
-
   return (
     <>
       <Navbar />
@@ -254,7 +49,7 @@ function Home() {
               defaultContactMaterial={{
                 friction: 1.2,
                 restitution: 0,
-              }}e1ec9e
+              }}
             >
               <Floor />
 
@@ -266,6 +61,7 @@ function Home() {
                 scale={1}
                 rotation={[0, 17.5, 0]}
                 tooltip="Games"
+                tooltipPosition={[0, 1.8, 0]}
               />
 
               <ClickableModel // question mark model 
@@ -288,6 +84,7 @@ function Home() {
                 scale={1}
                 tune={[0.0, 0.0]}
                 tooltip='Interactive experiments'
+                tooltipPosition={[0.6, 1.6, -0.4]}
               />
 
               <ClickableCube 
@@ -303,6 +100,7 @@ function Home() {
               scale={1}
               tune={[0.2, 0.0]}
               tooltip='What I have learned creating Labben'
+              tooltipPosition={[0.5, 1.6, 0]}
               />
             </Physics>
           </Suspense>
@@ -315,5 +113,3 @@ function Home() {
 }
 
 export default Home
-
-useGLTF.preload('/models/controller.glb')
