@@ -5,6 +5,7 @@ import Games from './pages/Games'
 import Animations from './pages/Animations'
 import Interactive from './pages/Interactive'
 import About from './pages/About'
+import Questions from './pages/Questions'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/animations" element={<Animations />} />
         <Route path="/interactive" element={<Interactive />} />
         <Route path="/about" element={<About />} />
+        <Route path="/questions" element={<Questions />} />
       </Routes>
     </>
   )
