@@ -228,7 +228,7 @@ function Home() {
 
       <div id="canvas-container">
         <Canvas dpr={[1, 2]} shadows camera={{ position: [3, 8, 4], fov: 50 }}>
-          <color attach="background" args={['#e1ec9e']} />
+          <color attach="background" args={['#3F4D3F']} />
 
           {/* shadow */}
           <ambientLight intensity={0.4} />
@@ -254,7 +254,7 @@ function Home() {
               defaultContactMaterial={{
                 friction: 1.2,
                 restitution: 0,
-              }}
+              }}e1ec9e
             >
               <Floor />
 
@@ -276,7 +276,7 @@ function Home() {
                 args={[1, 1.5, 1]}
                 scale={5}
                 tune ={[0.2, 0.0]}
-                tooltip='Questions about the website'
+                tooltip=''
               />
 
               <ClickableModel // pointer model
