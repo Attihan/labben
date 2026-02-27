@@ -8,6 +8,7 @@ type ClickableCubeProps = {
 }
 
 function ClickableCube({ position, href, args = [1, 1, 1] }: ClickableCubeProps) {
+  // Physics body for the cube
   const [ref] = useBox(() => ({
     mass: 1,
     position,
@@ -23,6 +24,7 @@ function ClickableCube({ position, href, args = [1, 1, 1] }: ClickableCubeProps)
     },
   }))
 
+  // Click navigation
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation()
     if (href) {
@@ -31,6 +33,7 @@ function ClickableCube({ position, href, args = [1, 1, 1] }: ClickableCubeProps)
   }
 
   return (
+    // Visible placeholder cube
     <mesh
       castShadow
       receiveShadow

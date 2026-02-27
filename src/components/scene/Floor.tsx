@@ -5,6 +5,7 @@ type FloorProps = {
 }
 
 function Floor({ position = [0, 0, 0] }: FloorProps) {
+  // Physics plane for collisions
   const [ref] = usePlane(() => ({
     rotation: [-Math.PI / 2, 0, 0],
     position,
@@ -16,11 +17,13 @@ function Floor({ position = [0, 0, 0] }: FloorProps) {
 
   return (
     <group>
+      {/* Visible floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={position}>
         <planeGeometry args={[50, 50]} />
         <meshStandardMaterial color="#3F4D3F" roughness={1} metalness={0} />
       </mesh>
 
+      {/* Shadow catcher */}
       <mesh
         ref={ref as never}
         rotation={[-Math.PI / 2, 0, 0]}

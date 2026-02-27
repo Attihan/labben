@@ -30,6 +30,7 @@ function ClickableModel({
   const { scene } = useGLTF(glbPath)
   const [hovered, setHovered] = useState(false)
 
+  // Cloned model with material tuning
   const model = useMemo(() => {
     const cloned = scene.clone(true)
     const [roughness, metalness] = tune
@@ -71,6 +72,7 @@ function ClickableModel({
     return cloned
   }, [scene, tune])
 
+  // Physics body for the model
   const [ref] = useBox(() => ({
     mass: 1,
     position,
@@ -86,6 +88,7 @@ function ClickableModel({
     },
   }))
 
+  // Click navigation
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation()
     if (href) {
@@ -106,10 +109,12 @@ function ClickableModel({
         setHovered(false)
       }}
     >
+      {/* Centered model */}
       <Center>
         <primitive object={model} scale={0.7 * scale} rotation={rotation} />
       </Center>
 
+      {/* Hover tooltip */}
       {hovered && tooltip && (
         <Html position={tooltipPosition} center>
           <div

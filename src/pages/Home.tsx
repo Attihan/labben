@@ -25,7 +25,7 @@ function Home() {
         <Canvas dpr={[1, 2]} shadows camera={{ position: [3, 8, 4], fov: 50 }}>
           <color attach="background" args={['#3F4D3F']} />
 
-          {/* shadow */}
+          {/* Scene lights */}
           <ambientLight intensity={0.4} />
           <directionalLight
             position={[8, 12, 8]}
@@ -41,6 +41,7 @@ function Home() {
             shadow-camera-bottom={-15}
           />
 
+          {/* Scene content */}
           <Suspense fallback={null}>
             <Physics
               broadphase="SAP"
